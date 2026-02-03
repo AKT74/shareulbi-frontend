@@ -177,7 +177,6 @@ export default function AdminCategoryDepartmentPage() {
 
   return (
     <div className="flex min-h-screen">
-      <AppSidebar active="admin-categories" />
 
       <main className="flex-1 p-6 space-y-6">
         <div>

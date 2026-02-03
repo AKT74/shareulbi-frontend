@@ -85,7 +85,6 @@ export default function ActivityLogPage() {
 
   return (
     <div className="flex min-h-screen bg-background">
-      <AppSidebar active="admin-activity-logs" />
 
       <main className="flex-1 p-6">
           <CardHeader>

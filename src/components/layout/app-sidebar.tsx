@@ -23,6 +23,7 @@ import {
 import LogoutDialog from "../dialogs/logout-dialog";
 import ReportFeedbackDialog from "../dialogs/report-feedback-dialog";
 import { useAuth } from "@/app/context/auth-context";
+import { useAdminStore } from "@/store/admin.store";
 
 type SidebarActive =
   | "dashboard"
@@ -44,6 +45,8 @@ export default function AppSidebar({ active }: AppSidebarProps) {
   const { user } = useAuth();
   const [openLogout, setOpenLogout] = useState(false);
   const [openReport, setOpenReport] = useState(false);
+
+  const pendingUserCount = useAdminStore((state) => state.pendingUserCount);
 
   console.log("USER SIDEBAR:", user);
 
@@ -140,9 +143,23 @@ export default function AppSidebar({ active }: AppSidebarProps) {
                 <Link href="/admin/users">
                   <Button
                     variant={active === "admin-users" ? "secondary" : "ghost"}
-                    className="w-full justify-start gap-2"
+                    className="w-full justify-start gap-2 relative"
                   >
-                    <User size={18} /> Kelola Users
+                    <User size={18} />
+                    <span className="flex-1 text-left">Kelola Users</span>
+
+                    {pendingUserCount > 0 && (
+                      <span
+                        className="
+                                  ml-auto
+                                  bg-red-500 text-white
+                                  text-xs px-2 py-0.5
+                                  rounded-full
+                                  "
+                      >
+                        {pendingUserCount}
+                      </span>
+                    )}
                   </Button>
                 </Link>
 
