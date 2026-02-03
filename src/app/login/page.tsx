@@ -9,6 +9,7 @@ import { useAuth } from "@/app/context/auth-context"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import Swal from "sweetalert2"
 import {
   Card,
   CardContent,
@@ -35,65 +36,86 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
 
   const handleLogin = async () => {
-    setError(null)
+  if (!email || !password) {
+    Swal.fire({
+      icon: "warning",
+      title: "Form belum lengkap",
+      text: "Email dan password wajib diisi",
+    })
+    return
+  }
 
-    if (!email || !password) {
-      setError("Email dan password wajib diisi")
+  Swal.fire({
+    title: "Sedang login...",
+    allowOutsideClick: false,
+    didOpen: () => {
+      Swal.showLoading()
+    },
+  })
+
+  setLoading(true)
+
+  try {
+    /* ================= 1️⃣ LOGIN ================= */
+    await login(email, password)
+
+    /* ================= 2️⃣ FETCH /ME ================= */
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/api/me`,
+      { credentials: "include" }
+    )
+
+    if (!res.ok) {
+      let data = null
+      try {
+        data = await res.json()
+      } catch {}
+      throw new Error(data?.message || "Session tidak valid")
+    }
+
+    const user = await res.json()
+
+    /* ================= 3️⃣ SET CONTEXT ================= */
+    setUser(user)
+
+    Swal.close()
+
+    await Swal.fire({
+      icon: "success",
+      title: "Login berhasil",
+      text: "Selamat datang di ShareULBI",
+      timer: 1500,
+      showConfirmButton: false,
+    })
+
+    /* ================= 4️⃣ REDIRECT ================= */
+    if (user.onboarding_status !== "approved") {
+      router.replace("/onboarding")
       return
     }
 
-    setLoading(true)
+    router.replace(
+      user.role?.name === "admin" ? "/admin" : "/dashboard"
+    )
+  } catch (err: unknown) {
+    Swal.close()
 
-    try {
-      /* ================= 1️⃣ LOGIN (SET COOKIE) ================= */
-      await login(email, password)
-
-      /* ================= 2️⃣ FETCH /ME ================= */
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/me`,
-        {
-          credentials: "include",
-        }
-      )
-
-      if (!res.ok) {
-        let data: BackendError | null = null
-        try {
-          data = await res.json()
-        } catch {
-          // ignore
-        }
-        throw new Error(data?.message || "Session tidak valid")
-      }
-
-      const user = await res.json()
-
-      /* ================= 3️⃣ SET USER KE CONTEXT ================= */
-      setUser(user)
-
-      /* ================= 4️⃣ REDIRECT ================= */
-      if (user.onboarding_status !== "approved") {
-        router.replace("/onboarding")
-        return
-      }
-
-      router.replace(
-        user.role?.name === "admin"
-          ? "/admin"
-          : "/dashboard"
-      )
-    } catch (err: unknown) {
-      if (err instanceof Error) {
-        setError(err.message)
-      } else {
-        setError("Login gagal")
-      }
-    } finally {
-      setLoading(false)
-    }
+    Swal.fire({
+      icon: "error",
+      title: "Login gagal",
+      text:
+        err instanceof Error
+          ? err.message
+          : "Terjadi kesalahan saat login",
+    })
+  } finally {
+    setLoading(false)
   }
+}
+
 
   return (
+    
     <div className="min-h-screen flex items-center justify-center bg-muted px-4">
       <Card className="w-full max-w-sm">
         <CardHeader>
@@ -104,11 +126,7 @@ export default function LoginPage() {
         </CardHeader>
 
         <CardContent className="space-y-4">
-          {error && (
-            <Alert variant="destructive">
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
+          
 
           <div className="space-y-2">
             <label className="text-sm font-medium">Email</label>

@@ -13,6 +13,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import Swal from "sweetalert2"
 import {
   Select,
   SelectTrigger,
@@ -72,38 +73,62 @@ export default function RegisterPage() {
   };
 
   const handleSubmit = async () => {
-  setError(null);
-
-  const validationError = validateForm();
+  const validationError = validateForm()
   if (validationError) {
-    setError(validationError);
-    return;
+    Swal.fire({
+      icon: "warning",
+      title: "Validasi gagal",
+      text: validationError,
+    })
+    return
   }
 
-  if (loading) return;
-  setLoading(true);
+  if (loading) return
+  setLoading(true)
+
+  Swal.fire({
+    title: "Mendaftarkan akun...",
+    allowOutsideClick: false,
+    didOpen: () => {
+      Swal.showLoading()
+    },
+  })
 
   try {
-    const res = await register(form);
-    console.log("REGISTER SUCCESS FE:", res); // DEBUG AMAN
-    router.push("/onboarding");
+    await register(form)
+
+    Swal.close()
+
+    await Swal.fire({
+      icon: "success",
+      title: "Registrasi berhasil",
+      text: "Silakan menunggu proses verifikasi",
+      confirmButtonText: "OK",
+    })
+
+    router.push("/onboarding")
   } catch (err: unknown) {
-    let message = "Registrasi gagal";
+    Swal.close()
+
+    let message = "Registrasi gagal"
 
     if (typeof err === "object" && err !== null && "response" in err) {
       const res = (
-        err as {
-          response?: { data?: { message?: string } };
-        }
-      ).response;
-      message = res?.data?.message ?? message;
+        err as { response?: { data?: { message?: string } } }
+      ).response
+      message = res?.data?.message ?? message
     }
 
-    setError(message);
+    Swal.fire({
+      icon: "error",
+      title: "Registrasi gagal",
+      text: message,
+    })
   } finally {
-    setLoading(false);
+    setLoading(false)
   }
-};
+}
+
 
 
   return (
@@ -115,12 +140,7 @@ export default function RegisterPage() {
         </CardHeader>
 
         <CardContent className="space-y-4">
-          {error && (
-            <Alert variant="destructive">
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
-
+        
           <Input
             placeholder="Full Name"
             value={form.fullname}
