@@ -21,7 +21,7 @@ export default function CommentSection({ postId }: Props) {
 
     console.log("🟡 FETCH COMMENTS:", postId)
 
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/posts/${postId}/comments`, {
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/posts/${postId}/comments`, {
       credentials: "include", // 🔥 WAJIB (COOKIE)
     })
       .then((r) => r.json())
@@ -43,7 +43,7 @@ export default function CommentSection({ postId }: Props) {
 
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/posts/${postId}/comments`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/posts/${postId}/comments`,
         {
           method: "POST",
           credentials: "include", // 🔥 WAJIB
@@ -60,7 +60,7 @@ export default function CommentSection({ postId }: Props) {
 
       // refetch comments (AMAN & KONSISTEN)
       const latest = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/posts/${postId}/comments`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/posts/${postId}/comments`,
         { credentials: "include" }
       )
 
